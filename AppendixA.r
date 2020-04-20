@@ -1,27 +1,24 @@
 
-#  Bayesian Time-to-Event Analysis
-#  Daniel Eacker
-#  24 March, 2020
-#  Winter weather impacts pronghorn survival in a partially migratory population
+
+#  Partially Migratory Pronghorn Survival on their Northern Range
 #  Jones P. F., A. F. Jakes, D. R. Eacker, and M. Hebblewhite
-
-
+#  Supporting Information
+#  7 April, 2020
 
 
 # Appendix A - Run summary statistics and analysis for pronghorn survival, cause-specific mortality, and risk regression
 
 
 # * Notes *
-# -One important different in our BUGS model specification compared to the OpenBUGS example (http://www.openbugs.net/Examples/Leuk.html)
+# -One important difference in our BUGS model specification compared to the OpenBUGS example (http://www.openbugs.net/Examples/Leuk.html)
 # is that we create the data before running the model in JAGS, whereas their example includes a data loop in the model to create the counting
-# process data. We considered it a clearner presentation to case this data creation step into our R functions rather than in the model,
+# process data. We considered it a cleaner presentation to house this data creation step into our R functions rather than in the model,
 # but the results are identical between the two approaches.
 #
-# -Also note that results will differ ever so slightly with each MCMC run since simulation is used to estimate the posterioer distribution of parameters
+# -Also note that results will differ ever so slightly with each MCMC run since simulation is used to estimate the posterior distribution of parameters
 
 
 # BEGIN R CODE
-
 source("functionLoad.R") # source .r file to load all functions
 
 # install and load R packages using ipak function
@@ -159,19 +156,11 @@ all.years = lapply(jags.data.list, function(x) autojags(model.file="Bayesian_sur
 
 names(all.years)=years # name jags output list
 
-# adjust 2011 survival estimate for annual period since there was only 109 days of risk 
-# adjust sim.list
-all.years[[which(names(all.years)==2011)]]$sims.list$S0=all.years[[which(names(all.years)==2011)]]$sims.list$S0 * (all.years[[which(names(all.years)==2011)]]$sims.list$S0^(256/365))
-# calculate median
-all.years[[which(names(all.years)==2011)]]$q50$S0=apply(all.years[[which(names(all.years)==2011)]]$sims.list$S0,2,function(x)quantile(x,0.50))
-# calculate lower 95% Bayesian credibility interval
-all.years[[which(names(all.years)==2011)]]$q2.5$S0=apply(all.years[[which(names(all.years)==2011)]]$sims.list$S0,2,function(x)quantile(x,0.025))
-# calculate upper 95% Bayesian credibility interval
-all.years[[which(names(all.years)==2011)]]$q97.5$S0=apply(all.years[[which(names(all.years)==2011)]]$sims.list$S0,2,function(x)quantile(x,0.975))
-
 out=data.frame(year=years,survival=unlist(lapply(all.years, function(x) tail(x$q50$S0,1))),
            lowerBCI=unlist(lapply(all.years, function(x) tail(x$q2.5$S0,1))),
            upperBCI=unlist(lapply(all.years, function(x) tail(x$q97.5$S0,1))))
+# adjust survival in 2011 for the fact that it only included 109 days (use adj.surv() function)
+out[which(out$year==2011),2:4]=adj.surv(surv=out[which(out$year==2011),2:4],days=109,totDays=365)
 out[,2:4]=apply(out[,2:4],2,function(x)round(x,2))
 mig.out=out # store migratory estimates
 
@@ -200,20 +189,13 @@ all.years = lapply(jags.data.list, function(x) autojags(model.file="Bayesian_sur
 
 names(all.years)=years # name jags output list
 
-# adjust 2011 survival estimate for annual period since there was only 109 days of risk 
-# adjust sim.list
-all.years[[which(names(all.years)==2011)]]$sims.list$S0=all.years[[which(names(all.years)==2011)]]$sims.list$S0 * (all.years[[which(names(all.years)==2011)]]$sims.list$S0^(256/365))
-# calculate median
-all.years[[which(names(all.years)==2011)]]$q50$S0=apply(all.years[[which(names(all.years)==2011)]]$sims.list$S0,2,function(x)quantile(x,0.50))
-# calculate lower 95% Bayesian credibility interval
-all.years[[which(names(all.years)==2011)]]$q2.5$S0=apply(all.years[[which(names(all.years)==2011)]]$sims.list$S0,2,function(x)quantile(x,0.025))
-# calculate upper 95% Bayesian credibility interval
-all.years[[which(names(all.years)==2011)]]$q97.5$S0=apply(all.years[[which(names(all.years)==2011)]]$sims.list$S0,2,function(x)quantile(x,0.975))
-
 out=data.frame(year=years,survival=unlist(lapply(all.years, function(x) tail(x$q50$S0,1))),
            lowerBCI=unlist(lapply(all.years, function(x) tail(x$q2.5$S0,1))),
            upperBCI=unlist(lapply(all.years, function(x) tail(x$q97.5$S0,1))))
+# adjust survival in 2011 for the fact that it only included 109 days (use adj.surv() function)
+out[which(out$year==2011),2:4]=adj.surv(surv=out[which(out$year==2011),2:4],days=109,totDays=365)
 out[,2:4]=apply(out[,2:4],2,function(x)round(x,2))
+
 res.out=out # store resident estimates
 
 res.out
@@ -242,19 +224,11 @@ all.years = lapply(jags.data.list, function(x) autojags(model.file="Bayesian_sur
 
 names(all.years)=years # name jags output list
 
-# adjust 2011 survival estimate for annual period since there was only 109 days of risk 
-# adjust sim.list
-all.years[[which(names(all.years)==2011)]]$sims.list$S0=all.years[[which(names(all.years)==2011)]]$sims.list$S0 * (all.years[[which(names(all.years)==2011)]]$sims.list$S0^(256/365))
-# calculate median
-all.years[[which(names(all.years)==2011)]]$q50$S0=apply(all.years[[which(names(all.years)==2011)]]$sims.list$S0,2,function(x)quantile(x,0.50))
-# calculate lower 95% Bayesian credibility interval
-all.years[[which(names(all.years)==2011)]]$q2.5$S0=apply(all.years[[which(names(all.years)==2011)]]$sims.list$S0,2,function(x)quantile(x,0.025))
-# calculate upper 95% Bayesian credibility interval
-all.years[[which(names(all.years)==2011)]]$q97.5$S0=apply(all.years[[which(names(all.years)==2011)]]$sims.list$S0,2,function(x)quantile(x,0.975))
-
 out=data.frame(year=years,survival=unlist(lapply(all.years, function(x) tail(x$q50$S0,1))),
            lowerBCI=unlist(lapply(all.years, function(x) tail(x$q2.5$S0,1))),
            upperBCI=unlist(lapply(all.years, function(x) tail(x$q97.5$S0,1))))
+# adjust survival in 2011 for the fact that it only included 109 days (use adj.surv() function)
+out[which(out$year==2011),2:4]=adj.surv(surv=out[which(out$year==2011),2:4],days=109,totDays=365)
 out[,2:4]=apply(out[,2:4],2,function(x)round(x,2))
 all.out=out # store pooled yearly estimates
 
@@ -382,25 +356,25 @@ cat("
 	   dN[i,j] ~ dpois(Idt[i,j]) # Poisson Likelihood
 	   Idt[i,j] = Y[i,j] * h0[j]
 	} # i	
-           mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
+     mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
 	   h0[j] ~ dgamma(mu[j], c) # hazard rate
-           S0[j] = exp(-cum.haz[j]) # baseline survivorship function
-           cum.haz[j] = sum(h0[1:j]) # cumulative hazard function
+     S0[j] = exp(-cum.haz[j]) # baseline survivorship function
+     cum.haz[j] = sum(h0[1:j]) # cumulative hazard function
     } # j
    # set survivorship to 1 at t=0
-   S = c(1,S0) # combine 1 into vector with baseline survivorship
+      S = c(1,S0) # combine 1 into vector with baseline survivorship
    # now loop over each cause and estimate cause-specific hazards
  for(m in 1:n.causes){
-      for(j in 1:n.fail.all[m]){
+  for(j in 1:n.fail.all[m]){
 	for(i in 1:n.ind){								
 	   dN.all[i,j,m] ~ dpois(Idt.all[i,j,m]) # Poisson Likelihood
 	   Idt.all[i,j,m] = Y.all[i,j,m] * h0.all[j,m]
 	} # i	
-           mu.all[j,m] = r.all * (t.all[j + 1,m] - t.all[j,m]) * c # prior mean hazard
+     mu.all[j,m] = r.all * (t.all[j + 1,m] - t.all[j,m]) * c # prior mean hazard
 	   h0.all[j,m] ~ dgamma(mu.all[j,m], c)
     # now calculate CIFs
-           haz.all[j,m] = h0.all[j,m] * S[times.all[j,m]]
-           CIF[j,m] = sum(haz.all[1:j,m])
+     haz.all[j,m] = h0.all[j,m] * S[times.all[j,m]]
+     CIF[j,m] = sum(haz.all[1:j,m])
     } # j
   } # m
    # priors
@@ -714,6 +688,8 @@ ph.data$tactic = as.vector(factor2ind(pa$tactic, "Resident"))
 ph.data$wsi = pa$wsi 
 ph.data$pred.wsi = seq(range(pa$wsi)[1],range(pa$wsi)[2],length.out=120) # makes 120 predictions for wsi
 ph.data$n.wsi = length(ph.data$pred.wsi)
+ph.data$year = pa$year-min(pa$year)+1
+ph.data$nyears=length(unique(pa$year))
 
 # set parameters to track
 params.bph <- c("psi","h0","beta","hr","cum.haz","S0","S.res","S.mig","S.res.wsi","S.mig.wsi")
@@ -728,21 +704,21 @@ cat("
 	   dN[i,j] ~ dpois(Idt[i,j]) # Poisson Likelihood
 	   Idt[i,j] = Y[i,j] * h0[j] * exp(beta[1]*tactic[i]+beta[2]*wsi[i]+beta[3]*tactic[i]*wsi[i])
 	} # i	
-           mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
-	         h0[j] ~ dgamma(mu[j], c) # hazard rate
-           S0[j] = exp(-cum.haz[j]) # baseline survivorship function
-           cum.haz[j] = sum(h0[1:j]) # cumulative hazard function
-           # get predicted surviavl curves for migrants and residents adjusted for mean winter severity
-           S.res[j] <- S0[j]^exp(beta[1]*0+beta[2]*mean(wsi)+beta[3]*0*mean(wsi))
-           S.mig[j] <- S0[j]^exp(beta[1]*1+beta[2]*mean(wsi)+beta[3]*1*mean(wsi))
+     mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
+	   h0[j] ~ dgamma(mu[j], c) # hazard rate
+     S0[j] = exp(-cum.haz[j]) # baseline survivorship function
+     cum.haz[j] = sum(h0[1:j]) # cumulative hazard function
+     # get predicted surviavl curves for migrants and residents adjusted for mean winter severity
+     S.res[j] = S0[j]^exp(beta[1]*0+beta[2]*mean(wsi)+beta[3]*0*mean(wsi))
+     S.mig[j] = S0[j]^exp(beta[1]*1+beta[2]*mean(wsi)+beta[3]*1*mean(wsi))
     } # j
    # get predicted survival curves for migrants and residents over the range of observed winter severity indices
-      for(k in 1:n.wsi){  
-      for(j in 1:n.fail){
-           S.res.wsi[j,k] <- S0[j]^exp(beta[1]*0+beta[2]*pred.wsi[k]+beta[3]*0*pred.wsi[k])
-           S.mig.wsi[j,k] <- S0[j]^exp(beta[1]*1+beta[2]*pred.wsi[k]+beta[3]*1*pred.wsi[k])
-      } # j
-      } # k
+    for(k in 1:n.wsi){  
+    for(j in 1:n.fail){
+     S.res.wsi[j,k] = S0[j]^exp(beta[1]*0+beta[2]*pred.wsi[k]+beta[3]*0*pred.wsi[k])
+     S.mig.wsi[j,k] = S0[j]^exp(beta[1]*1+beta[2]*pred.wsi[k]+beta[3]*1*pred.wsi[k])
+    } # j
+    } # k
 
    # priors
       c = 0.001 # degree of confidence in guess of hazard rate
@@ -819,19 +795,19 @@ cat("
 	   dN[i,j] ~ dpois(Idt[i,j]) # Poisson Likelihood
 	   Idt[i,j] = Y[i,j] * h0[j] * exp(g[1]*beta[1]*tactic[i]+g[2]*beta[2]*wsi[i]+g[3]*beta[3]*tactic[i]*wsi[i])
 	} # i	
-           mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
-	         h0[j] ~ dgamma(mu[j], c) # hazard rate
-           S0[j] = exp(-cum.haz[j]) # baseline survivorship function
-           cum.haz[j] = sum(h0[1:j]) # cumulative hazard function
-           # get predicted surviavl curves for migrants and residents adjusted for mean winter severity
-           S.res[j] <- S0[j]^exp(beta[1]*0+beta[2]*mean(wsi)+beta[3]*0*mean(wsi))
-           S.mig[j] <- S0[j]^exp(beta[1]*1+beta[2]*mean(wsi)+beta[3]*1*mean(wsi))
+     mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
+	   h0[j] ~ dgamma(mu[j], c) # hazard rate
+     S0[j] = exp(-cum.haz[j]) # baseline survivorship function
+     cum.haz[j] = sum(h0[1:j]) # cumulative hazard function
+    # get predicted surviavl curves for migrants and residents adjusted for mean winter severity
+     S.res[j] = S0[j]^exp(beta[1]*0+beta[2]*mean(wsi)+beta[3]*0*mean(wsi))
+     S.mig[j] = S0[j]^exp(beta[1]*1+beta[2]*mean(wsi)+beta[3]*1*mean(wsi))
     } # j
    # get predicted survival curves for migrants and residents over the range of observed winter severity indices
-      for(k in 1:n.wsi){  
-      for(j in 1:n.fail){
-           S.res.wsi[j,k] <- S0[j]^exp(beta[1]*0+beta[2]*pred.wsi[k]+beta[3]*0*pred.wsi[k])
-           S.mig.wsi[j,k] <- S0[j]^exp(beta[1]*1+beta[2]*pred.wsi[k]+beta[3]*1*pred.wsi[k])
+  for(k in 1:n.wsi){  
+  for(j in 1:n.fail){
+     S.res.wsi[j,k] = S0[j]^exp(beta[1]*0+beta[2]*pred.wsi[k]+beta[3]*0*pred.wsi[k])
+     S.mig.wsi[j,k] = S0[j]^exp(beta[1]*1+beta[2]*pred.wsi[k]+beta[3]*1*pred.wsi[k])
       } # j
       } # k
    # priors
@@ -887,7 +863,7 @@ for(i in 1:5){
   
   endTime=Sys.time()
   
-  cat("Time elapsed: ",endTime-startTime,",  ", "model run ",i," ","finished")
+  cat("Time elapsed: ",paste0(format(endTime-startTime),","),"model run",i,"finished")
   
 }
 
@@ -909,9 +885,9 @@ cat("
 	for(i in 1 :n.ind){								
 	   dN[i,j] ~ dpois(Idt[i,j]) # Poisson Likelihood
 	   Idt[i,j] = Y[i,j] * h0[j] 
-           dN.new[i,j] ~ dpois(Idt[i,j]) 
+     dN.new[i,j] ~ dpois(Idt[i,j]) 
 	} # i	
-           mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
+     mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
 	   h0[j] ~ dgamma(mu[j], c) 
     } # j
    # priors
@@ -919,15 +895,15 @@ cat("
     r = 0.003 # guess at the daily hazard rate
    # goodness-of-fit (collapse counts across individuals)
    for(j in 1:n.fail){   
-        d.new[j]=sum(dN.new[1:n.ind,j])
-        d.obs[j]=sum(dN[1:n.ind,j])
-        d.exp[j]=sum(Idt[1:n.ind,j])    
-        err[j]=pow(pow(d.obs[j],0.5) - pow(d.exp[j],0.5),2)
-        errnew[j]=pow(pow(d.new[j],0.5) - pow(d.exp[j],0.5),2)
+    d.new[j]=sum(dN.new[1:n.ind,j])
+    d.obs[j]=sum(dN[1:n.ind,j])
+    d.exp[j]=sum(Idt[1:n.ind,j])    
+    err[j]=pow(pow(d.obs[j],0.5) - pow(d.exp[j],0.5),2)
+    errnew[j]=pow(pow(d.new[j],0.5) - pow(d.exp[j],0.5),2)
      }
    # calculate discrepancy statistic
-       Tobs = sum(err[])
-       Tnew = sum(errnew[])
+    Tobs = sum(err[])
+    Tnew = sum(errnew[])
     # end model
      }		
     ",fill = TRUE)
@@ -962,18 +938,18 @@ cat("
 	   dN[i,j] ~ dpois(Idt[i,j]) # Poisson Likelihood
 	   Idt[i,j] = Y[i,j] * h0[j] * exp(beta*wsi[i])
 	} # i	
-           mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
+     mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
 	   h0[j] ~ dgamma(mu[j], c) # hazard rate 
-           S0[j] = exp(-cum.haz[j]) # baseline survivorship function
-           cum.haz[j] = sum(h0[1:j]) # cumulative hazard function
+     S0[j] = exp(-cum.haz[j]) # baseline survivorship function
+     cum.haz[j] = sum(h0[1:j]) # cumulative hazard function
     } # j
    # priors
     c = 0.001 # degree of confidence in guess of hazard rate
     r = 0.003 # guess at the daily hazard rate
     # get predicted survival curves for migrants and residents over the range of observed winter severity indices
-      for(k in 1:n.wsi){  
-      for(j in 1:n.fail){
-           S.wsi[j,k] <- S0[j]^exp(beta*pred.wsi[k])
+  for(k in 1:n.wsi){  
+  for(j in 1:n.fail){
+     S.wsi[j,k] = S0[j]^exp(beta*pred.wsi[k])
       } # j
       } # k
     # priors for log risk coefficients
@@ -1025,8 +1001,8 @@ cat("
  model{
    # now loop over each cause and estimate cause-specific regression coefficients for WSI
  for(m in 1:n.causes){
-      for(j in 1:n.fail.all[m]){
-	for(i in 1:n.ind){								
+ for(j in 1:n.fail.all[m]){
+ for(i in 1:n.ind){								
 	   dN.all[i,j,m] ~ dpois(Idt.all[i,j,m]) # Poisson Likelihood
 	   Idt.all[i,j,m] = Y.all[i,j,m] * h0.all[j,m] * exp(beta[m]*wsi[i])
 	} # i	
@@ -1144,6 +1120,7 @@ jags.list=list(y=c(bs.list1[[1]]$y,bs.list2[[1]]$y),P=c(bs.list1[[1]]$P,bs.list2
 bs.params2=c("mu.rep.mig","mu.rep.res","mu","gamma","lambda","beta1","beta00")
 # here beta1 is the offset for the migration tactic (Migratory=1,0 otherwise)
 
+# provide a set of inital values
 jags.inits=function()
     list(beta1=0.5,beta00=-16,lambda=100)
 
@@ -1157,7 +1134,7 @@ model{
     } # i
   # priors
       beta[1:K] ~ dmnorm(beta0[1:K,1] + beta00, lambda*Q[1:K,1:K])
-      gamma <- beta - beta00 # derive spline coefficient offsets from the overall mean
+      gamma = beta - beta00 # derive spline coefficient offsets from the overall mean
       lambda ~ dgamma(0.001, 0.001) # gamma prior on dispersion parameter
       beta00 ~ dnorm(0, 1e-6) # shared prior for mean of coefficients
       beta1 ~ dnorm(0, 1e-6) # prior on effect of migration tactic
@@ -1202,8 +1179,8 @@ d.wint.res = d.winter[d.winter$tactic=="Resident",]
 d.wint.res$tactic=factor(d.wint.res$tactic)
 
 # now prep the splines for both tactics
-bs.list1=prep.bspline(data=d.wint.mig,nbin=30,nbasis=5,npred=25,degree=3,penalize=TRUE,diffOrder=2)
-bs.list2=prep.bspline(data=d.wint.res,nbin=30,nbasis=5,npred=25,degree=3,penalize=TRUE,diffOrder=2)
+bs.list1=prep.bspline(data=d.wint.mig,nbin=25,nbasis=5,npred=30,degree=3,penalize=TRUE,diffOrder=2)
+bs.list2=prep.bspline(data=d.wint.res,nbin=25,nbasis=5,npred=30,degree=3,penalize=TRUE,diffOrder=2)
 
 
 raw.list=list(bs.list1[[2]],bs.list2[[2]]) # store raw data
@@ -1214,11 +1191,12 @@ jags.list=list(y=c(bs.list1[[1]]$y,bs.list2[[1]]$y),P=c(bs.list1[[1]]$P,bs.list2
    X = bs.list1[[1]]$X,X.pred = bs.list1[[1]]$X.pred,beta0 = bs.list1[[1]]$beta0,
    Q = bs.list1[[1]]$Q,m = bs.list1[[1]]$m,K = bs.list1[[1]]$K)
 
+# provide a set of inital values 
 jags.inits=function()
     list(beta1=-1,beta00=-28,lambda=0.002)
 
 # fit Penalized B-spline mixed effects model in JAGS for both tactics # inits=jags.inits,
-out.bs.mig = autojags(model.file="Bayesian_pspline_wtactic.txt",data=jags.list,inits=jags.inits,parameters.to.save=bs.params2,parallel=TRUE,iter.increment=5000,n.chains=2,n.burnin=1000,n.adapt=20000,max.iter=200000,n.thin=1, codaOnly=c("gamma","mu","mu.rep.mig","mu.rep.res"))
+out.bs.mig = autojags(model.file="Bayesian_pspline_wtactic.txt",data=jags.list,inits=jags.inits,parameters.to.save=bs.params2,parallel=TRUE,iter.increment=5000,n.chains=2,n.burnin=1000,n.adapt=20000,max.iter=100000,n.thin=1, codaOnly=c("gamma","mu","mu.rep.mig","mu.rep.res"))
 
 # store output for migrants in a dataframe
 bayes.mig=data.frame(x=bs.list1[[3]],y=apply(out.bs.mig$sims.list$mu.rep.mig,2,median),                
@@ -1256,6 +1234,7 @@ jags.list=list(y=c(bs.list1[[1]]$y,bs.list2[[1]]$y),P=c(bs.list1[[1]]$P,bs.list2
    X = bs.list1[[1]]$X,X.pred = bs.list1[[1]]$X.pred,beta0 = bs.list1[[1]]$beta0,
    Q = bs.list1[[1]]$Q,m = bs.list1[[1]]$m,K = bs.list1[[1]]$K)
 
+# provide a set of inital values
 jags.inits=function()
     list(beta1=-2,beta00=-15,lambda=100)
 
@@ -1298,6 +1277,7 @@ jags.list=list(y=c(bs.list1[[1]]$y,bs.list2[[1]]$y),P=c(bs.list1[[1]]$P,bs.list2
    X = bs.list1[[1]]$X,X.pred = bs.list1[[1]]$X.pred,beta0 = bs.list1[[1]]$beta0,
    Q = bs.list1[[1]]$Q,m = bs.list1[[1]]$m,K = bs.list1[[1]]$K)
 
+# provide a set of inital values
 jags.inits=function()
     list(beta1=1,beta00=-15,lambda=15)
 
