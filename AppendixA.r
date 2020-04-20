@@ -1,6 +1,6 @@
 
 
-#  Partially Migratory Pronghorn Survival on their Northern Range
+#  Annual Pronghorn Survival of a Partially Migratory Population
 #  Jones P. F., A. F. Jakes, D. R. Eacker, and M. Hebblewhite
 #  Supporting Information
 #  7 April, 2020
@@ -12,10 +12,10 @@
 # * Notes *
 # -One important difference in our BUGS model specification compared to the OpenBUGS example (http://www.openbugs.net/Examples/Leuk.html)
 # is that we create the data before running the model in JAGS, whereas their example includes a data loop in the model to create the counting
-# process data. We considered it a cleaner presentation to house this data creation step into our R functions rather than in the model,
+# process data. We considered it a cleaner presentation to house this data creation step within R functions rather than in the model,
 # but the results are identical between the two approaches.
 #
-# -Also note that results will differ ever so slightly with each MCMC run since simulation is used to estimate the posterior distribution of parameters
+# -Also, note that results will differ ever so slightly with each MCMC run since simulation is used to estimate the posterior distribution of parameters.
 
 
 # BEGIN R CODE
@@ -110,7 +110,6 @@ round(quantile(outS$sims.list$S0[,ncol(outS$sims.list$S0)],c(0.5,0.025,0.975)),2
 
 # set resident to reference group
 pa$tactic = relevel(pa$tactic, ref="Resident")
-ps$tactic = relevel(ps$tactic, ref="Resident")
 
 split.data = split(pa, pa$tactic) # split data into a list for migratory and resident pronghorn (this will drop NA's for tactic)
 
@@ -255,7 +254,7 @@ seasons=levels(mig.data$season) # store years for table below
 # now use prep.bsurv fuction to create data for all seasons
 jags.data.list = lapply(split.data, function(x) prep.bsurv(data=x, type="s"))
 
-# run autojags() function from jagsUI package to get surivorship estimates and save as "outSeason" for 3 seasons
+# run autojags() function from jagsUI package to get surivorship estimates and save as "outSeasonM" for 3 seasons
 outSeasonM=lapply(jags.data.list,function(x) autojags(model.file="Bayesian_surv.txt",data=x,parameters.to.save=params,parallel=TRUE,iter.increment=1000,n.chains=2, n.burnin=1000,n.adapt=1000,max.iter=100000,n.thin=1))
 
 out=data.frame(season=seasons,survival=unlist(lapply(outSeasonM, function(x) tail(x$q50$S0,1))),
@@ -284,7 +283,7 @@ seasons=levels(res.data$season) # store years for table below
 # now use prep.bsurv fuction to create data for all seasons
 jags.data.list = lapply(split.data, function(x) prep.bsurv(data=x, type="s"))
 
-# run autojags() function from jagsUI package to get surivorship estimates and save as "outSeason" for 3 seasons
+# run autojags() function from jagsUI package to get surivorship estimates and save as "outSeasonR" for 3 seasons
 outSeasonR=lapply(jags.data.list,function(x) autojags(model.file="Bayesian_surv.txt",data=x,parameters.to.save=params,parallel=TRUE,iter.increment=1000,n.chains=2, n.burnin=1000,n.adapt=1000,max.iter=100000,n.thin=1))
 
 out=data.frame(season=seasons,survival=unlist(lapply(outSeasonR, function(x) tail(x$q50$S0,1))),
@@ -319,7 +318,7 @@ out=data.frame(season=seasons,survival=unlist(lapply(outSeason, function(x) tail
            lowerBCI=unlist(lapply(outSeason, function(x) tail(x$q2.5$S0,1))),
            upperBCI=unlist(lapply(outSeason, function(x) tail(x$q97.5$S0,1))))
 out[,2:4]=apply(out[,2:4],2,function(x)round(x,2))
-season.out=out # store pooled estimates
+season.out=out # store seasonal pooled estimates
 
 season.out
 
@@ -387,7 +386,7 @@ cat("
 sink()
 
 
-# run autojags() function from jagsUI package to get CIF estimates and save as "out.csm"
+# run autojags() function from jagsUI package to get CIF estimates and save as "out.csmM"
 out.csmM=autojags(model.file="Bayesian_csm.txt",data=csm.dataM,parameters.to.save=params.csm,parallel=TRUE, iter.increment=1000,n.chains=2, n.burnin=1000,n.adapt=1000,max.iter=100000,n.thin=1)
 
 # organize output for summary
@@ -411,13 +410,13 @@ colnames(cif.mig)=c("CIF","lowerBCI","upperBCI")
 
 cif.mig
 
-# annual migrant CIFs
+# annual resident CIFs
 csm.dataR=prep.bsurv(data=pa[pa$tactic=="Resident",], type="a") # use prep.bsurv function to prep data for both survival and CIF estimates (type="a")
 
 # set parameters to track
 params.csm <- c("h0","S0","cum.haz","h0.all","CIF") # parameters to track (here,S0=baseline survival function,  cum.haz=baseline hazard function, h0=hazard rate, h0.all=cause-specific hazard rates, CIF=cumulative incidence functions for each cause)
 
-# run autojags() function from jagsUI package to get CIF estimates and save as "out.csm"
+# run autojags() function from jagsUI package to get CIF estimates and save as "out.csmR"
 out.csmR=autojags(model.file="Bayesian_csm.txt",data=csm.dataR,parameters.to.save=params.csm,parallel=TRUE, iter.increment=1000,n.chains=2, n.burnin=1000,n.adapt=1000,max.iter=100000,n.thin=1)
 
 # organize output for summary
@@ -491,7 +490,7 @@ split.data = split(mig.data, mig.data$season) # again, split data into a list se
 # now use prep.bsurv fuction to create data for all seasons
 jags.data.list = lapply(split.data, function(x) prep.bsurv(data=x, type="a"))
 
-# run autojags() function from jagsUI package to get CIF estimates and save as "outSeason.csm" for 3 seasons
+# run autojags() function from jagsUI package to get CIF estimates and save as "outSeason.csmM" for 3 seasons
 outSeason.csmM=lapply(jags.data.list,function(x) autojags(model.file="Bayesian_csm.txt",data=x,parameters.to.save=params.csm,parallel=TRUE,iter.increment=1000,n.chains=2, n.burnin=1000,n.adapt=1000,max.iter=100000,n.thin=1))
 
 
@@ -527,10 +526,11 @@ out3c=round(apply(out3c, 2, function(x) tail(na.omit(x),1)),3)
 cif.winter = data.frame(out1c, out2c, out3c)
 colnames(cif.winter)=c("CIF","lowerBCI","upperBCI")
 
+# Migratory CIF seasonal estimates
 cif.winter
 cif.summer
 
-# seaonal CIFs migratory individuals
+# seaonal CIFs resident individuals
 with(res.data, table(season,cause)) # look at table of causes by seasons
 
 split.data = split(res.data, res.data$season) # again, split data into a list seasons
@@ -547,7 +547,7 @@ split.data = split(res.data, res.data$season) # again, split data into a list se
 # now use prep.bsurv fuction to create data for all seasons
 jags.data.list = lapply(split.data, function(x) prep.bsurv(data=x, type="a"))
 
-# run autojags() function from jagsUI package to get CIF estimates and save as "outSeason.csm" for 3 seasons
+# run autojags() function from jagsUI package to get CIF estimates and save as "outSeason.csmR" for 3 seasons
 outSeason.csmR=lapply(jags.data.list,function(x) autojags(model.file="Bayesian_csm.txt",data=x,parameters.to.save=params.csm,parallel=TRUE,iter.increment=1000,n.chains=2, n.burnin=1000,n.adapt=1000,max.iter=100000,n.thin=1))
 
 # organize output for spring for residents
@@ -598,6 +598,7 @@ colnames(cif.res.summer)=c("CIF","lowerBCI","upperBCI")
 cif.res.winter = data.frame(out1c, out2c, out3c)
 colnames(cif.res.winter)=c("CIF","lowerBCI","upperBCI")
 
+# Resident CIF seasonal estimates
 cif.res.winter
 cif.res.spring
 cif.res.summer
@@ -671,6 +672,7 @@ out3c=round(apply(out3c, 2, function(x) tail(na.omit(x),1)),3)
 cif.winter = data.frame(out1c, out2c, out3c)
 colnames(cif.winter)=c("CIF","lowerBCI","upperBCI")
 
+# Pooled CIF seasonal estimates
 cif.winter
 cif.spring
 cif.summer
@@ -738,13 +740,13 @@ cat("
 sink()
 
 
-# estimate the HR for the interaction of standardized winter severity index and migration tactic Bayesian PH model
+# estimate the HR for the interaction of unstandardized winter severity index and migration tactic Bayesian PH model
 out.bph.m3 = autojags(model.file="Bayesian_ph_reg_psi.txt",data=ph.data,parameters.to.save=params.bph,parallel=TRUE, iter.increment=1000,n.chains=2,n.burnin=1000,n.adapt=1000,max.iter=100000,n.thin=1,codaOnly=c("cum.haz","S0","S.res","S.mig","S.res.wsi","S.mig.wsi"))
 
 # relevel tactic variable so residents are the reference
 pa$tactic = relevel(pa$tactic, ref="Resident")
 
-# fit requentists model (without individuals having unknown migration tacts)
+# fit frequentists model (without individuals having unknown migration tacts)
 reg.out = coxph(Surv(enter,exit,event)~tactic*wsi,data=pa)
 
 # get hazard ratios
@@ -867,6 +869,7 @@ for(i in 1:5){
   
 }
 
+# Examine model selection results
 GVSout
 
 
@@ -909,7 +912,7 @@ cat("
     ",fill = TRUE)
 sink()
 
-# fit univariate cox ph model
+# fit model without covariates to test goodness-of-fit
 out.ph.gof = autojags(model.file="Bayesian_ph_reg_postCheck.txt",data=gof.data,parameters.to.save=params.gof,parallel=TRUE,
                       iter.increment=1000,n.chains=2, n.burnin=1000,n.adapt=1000,max.iter=100000,n.thin=1,codaOnly = c("d.new","d.obs","d.exp"))
 
@@ -933,28 +936,28 @@ sink("Bayesian_ph_reg_univar_wsi_pred.txt") # JAGS version
 cat("
  # begin model loop
  model{
-    for(j in 1:n.fail){
-	for(i in 1 :n.ind){								
+  for(j in 1:n.fail){
+	 for(i in 1 :n.ind){								
 	   dN[i,j] ~ dpois(Idt[i,j]) # Poisson Likelihood
 	   Idt[i,j] = Y[i,j] * h0[j] * exp(beta*wsi[i])
-	} # i	
+	 } # i	
      mu[j] = r * (t[j + 1] - t[j]) * c # prior mean hazard
 	   h0[j] ~ dgamma(mu[j], c) # hazard rate 
      S0[j] = exp(-cum.haz[j]) # baseline survivorship function
      cum.haz[j] = sum(h0[1:j]) # cumulative hazard function
-    } # j
+   } # j
    # priors
-    c = 0.001 # degree of confidence in guess of hazard rate
-    r = 0.003 # guess at the daily hazard rate
+     c = 0.001 # degree of confidence in guess of hazard rate
+     r = 0.003 # guess at the daily hazard rate
     # get predicted survival curves for migrants and residents over the range of observed winter severity indices
   for(k in 1:n.wsi){  
-  for(j in 1:n.fail){
+   for(j in 1:n.fail){
      S.wsi[j,k] = S0[j]^exp(beta*pred.wsi[k])
-      } # j
-      } # k
-    # priors for log risk coefficients
-      beta~dnorm(0,1e-04) # log hazard ratios
-      hr=exp(beta) # hazard ratios
+   } # j
+   } # k
+   # priors for log risk coefficients
+     beta~dnorm(0,1e-04) # log hazard ratios
+     hr=exp(beta) # hazard ratios
 # end model
 }	
     ",fill = TRUE)
@@ -1001,22 +1004,22 @@ cat("
  model{
    # now loop over each cause and estimate cause-specific regression coefficients for WSI
  for(m in 1:n.causes){
- for(j in 1:n.fail.all[m]){
- for(i in 1:n.ind){								
+  for(j in 1:n.fail.all[m]){
+   for(i in 1:n.ind){								
 	   dN.all[i,j,m] ~ dpois(Idt.all[i,j,m]) # Poisson Likelihood
 	   Idt.all[i,j,m] = Y.all[i,j,m] * h0.all[j,m] * exp(beta[m]*wsi[i])
-	} # i	
+	 } # i	
      mu.all[j,m] = r.all * (t.all[j + 1,m] - t.all[j,m]) * c # prior mean hazard
 	   h0.all[j,m] ~ dgamma(mu.all[j,m], c)
-    } # j
-  } # m
+   } # j
+   } # m
    # priors
-    c = 0.001 # degree of confidence in guess of hazard rate
-    r.all = 0.001 # guess at daily cause-specific hazard rate
+     c = 0.001 # degree of confidence in guess of hazard rate
+     r.all = 0.001 # guess at daily cause-specific hazard rate
     # priors for log risk coefficients
     for(k in 1:n.causes){
-      beta[k]~dnorm(0,1e-04) # log hazard ratios
-      hr[k]=exp(beta[k]) # hazard ratios
+     beta[k]~dnorm(0,1e-04) # log hazard ratios
+     hr[k]=exp(beta[k]) # hazard ratios
     }
 # end model
 }	
@@ -1139,7 +1142,7 @@ model{
       beta00 ~ dnorm(0, 1e-6) # shared prior for mean of coefficients
       beta1 ~ dnorm(0, 1e-6) # prior on effect of migration tactic
   # predict smoothed hazards over finer range of times
-  for (j in 1:m){
+  for(j in 1:m){
       # migrants
       mu.rep.mig[j] = exp(inprod(X.pred[j,],gamma[]) + beta00 + beta1*1 + log(mean(P)))
       # residents
