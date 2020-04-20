@@ -6,6 +6,9 @@
   # load factor2ind() function	
   source("functions/factor2ind.r")
 
+  # source cause.survival function (Heisey and Patterson 2006)
+  source("functions/cause_survival.r")
+
   # load function that creates time-to-event data for Bayesian PH model
   source("functions/prep_bsurv.R")
 
@@ -14,7 +17,7 @@
   
   # load function to create B-spline basis functions
   source("functions/create_bspline.r")
-
+  
   # make penalty matrix with small numeric offset
   makeQ = function(degree, basis, epsilon=1e-3){
     x <- diag(basis)
@@ -29,24 +32,11 @@
   std2=function(x){
   (x - mean(x))/(2*sd(x))
   }
-
-  # function to set decimal places to 2
-  fmt <- function(){
-    function(x) format(x,nsmall = 2,scientific = FALSE)
-  }
   
   # load step function
   step=function(x){
   y = ifelse(x>=0,1,0)
   return(y)
   }
-  
-  # adjust survival times to an annual time interval (365 days) based on estimated survival to a certain number of days
-  # note that we use this function to adjust the survivorship estimates for 2011 since pronghorn were only monitored for 
-  #109 days that year
-  adj.surv=function(surv=NULL,days=NULL,totDays=365){
-    adj.surv = surv*(exp(-(-log(surv)/days)*(totDays-days)))
-    return(adj.surv)
-   }
   
   
