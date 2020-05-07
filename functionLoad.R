@@ -30,7 +30,7 @@
 	
   # simple function to standardize variables
   std2=function(x){
-  (x - mean(x))/(2*sd(x))
+  (x - mean(x,na.rm=TRUE))/(2*sd(x,na.rm=TRUE))
   }
   
   # load step function
